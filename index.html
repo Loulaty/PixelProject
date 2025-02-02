@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/main.css">
+
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <img src="Import.svg" alt="import the image to the site" id="importImage" style="cursor: pointer;">
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <br>
+        <img id="preview" style="max-width: 300px; display: none;">
+        <canvas id="canvas" style="display: none;"></canvas>
+        <br>
+        <button id="pixelateButton" style="display: none;">Pixeliser l'image</button>
+        
+        <script>
+            document.getElementById('importImage').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+        
+            document.getElementById('fileInput').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.getElementById('preview');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+        
+                        // Afficher le bouton pixelisation
+                        document.getElementById('pixelateButton').style.display = 'inline-block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        
+            document.getElementById('pixelateButton').addEventListener('click', function() {
+                const img = document.getElementById('preview');
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+        
+                // Définir la taille du canvas selon l'image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Dessiner l'image sur le canvas
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+        
+                // Appliquer l'effet pixelisé
+                let pixelSize = 10; // Taille des pixels
+                for (let y = 0; y < img.height; y += pixelSize) {
+                    for (let x = 0; x < img.width; x += pixelSize) {
+                        let pixel = ctx.getImageData(x, y, pixelSize, pixelSize);
+                        let avgColor = getAverageColor(pixel.data);
+                        ctx.fillStyle = `rgb(${avgColor.r}, ${avgColor.g}, ${avgColor.b})`;
+                        ctx.fillRect(x, y, pixelSize, pixelSize);
+                    }
+                }
+        
+                // Remplacer l'image originale par le canvas pixelisé
+                img.src = canvas.toDataURL();
+            });
+        
+            function getAverageColor(data) {
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    r += data[i];     // Rouge
+                    g += data[i + 1]; // Vert
+                    b += data[i + 2]; // Bleu
+                    count++;
+                }
+                return { r: r / count, g: g / count, b: b / count };
+            }
+        </script>
+    </header>
+</body>
+</html>
